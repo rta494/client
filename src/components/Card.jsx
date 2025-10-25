@@ -1,47 +1,75 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import axios from "axios";
+import { IoPlayCircleSharp } from "react-icons/io5";
+import { AiOutlinePlus } from "react-icons/ai";
+import { RiThumbUpFill, RiThumbDownFill } from "react-icons/ri";
+import { BsCheck } from "react-icons/bs";
+
 import { MY_API_KEY, TMDB_BASE_URL } from "../utils/constant";
 
-export default function Card({ movieData }) {
+export default React.memo(function Card({ movieData }) {
   const [hoverCardVisible, setHoverCardVisible] = useState(false);
+  const [hoverPosition, setHoverPosition] = useState({ top: 0, left: 0 });
   const [trailerKey, setTrailerKey] = useState(null);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
   const cardRef = useRef();
+  const hoverRef = useRef();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchTrailer = async () => {
-      try {
-        const { data } = await axios.get(
-          `${TMDB_BASE_URL}/movie/${movieData.id}/videos?api_key=${MY_API_KEY}&language=en-US`
-        );
-        const trailer = data.results.find(
-          (vid) => vid.type === "Trailer" && vid.site === "YouTube"
-        );
-        setTrailerKey(trailer ? trailer.key : null);
-      } catch {
-        setTrailerKey(null);
-      }
-    };
-
-    if (movieData.id) fetchTrailer();
+    if (movieData.id) {
+      const fetchTrailer = async () => {
+        try {
+          const { data } = await axios.get(
+            `${TMDB_BASE_URL}/movie/${movieData.id}/videos?api_key=${MY_API_KEY}&language=en-US`
+          );
+          const trailer = data.results.find(
+            (vid) => vid.type === "Trailer" && vid.site === "YouTube"
+          );
+          setTrailerKey(trailer ? trailer.key : null);
+        } catch (err) {
+          setTrailerKey(null);
+        }
+      };
+      fetchTrailer();
+    }
   }, [movieData.id]);
 
-  const handleMouseEnter = (e) => {
-    if (cardRef.current) {
+  const handleMouseMove = (e) => {
+    if (cardRef.current && hoverCardVisible) {
+      const hoverWidth = Math.min(400, window.innerWidth - 20);
+      const hoverHeight = 300;
+      let left = e.clientX - hoverWidth / 2;
+      left = Math.max(10, Math.min(left, window.innerWidth - hoverWidth - 10));
       const rect = cardRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.top - 310 > 0 ? rect.top - 310 : rect.bottom + 10,
-        left: rect.left,
-      });
+      let top = rect.top - hoverHeight - 10;
+      if (top < 10) top = rect.bottom + 10;
+      setHoverPosition({ top, left });
     }
-    setHoverCardVisible(true);
   };
 
-  const handleMouseLeave = () => {
-    setHoverCardVisible(false);
+  const handleMouseEnter = () => setHoverCardVisible(true);
+  const handleMouseLeave = (e) => {
+    if (
+      !e.relatedTarget ||
+      !hoverRef.current ||
+      !(e.relatedTarget instanceof Node) ||
+      !hoverRef.current.contains(e.relatedTarget)
+    ) {
+      setHoverCardVisible(false);
+    }
+  };
+  const handleHoverCardMouseLeave = (e) => {
+    if (
+      !e.relatedTarget ||
+      !cardRef.current ||
+      !(e.relatedTarget instanceof Node) ||
+      !cardRef.current.contains(e.relatedTarget)
+    ) {
+      setHoverCardVisible(false);
+    }
   };
 
   return (
@@ -49,12 +77,13 @@ export default function Card({ movieData }) {
       <CardContainer
         ref={cardRef}
         onMouseEnter={handleMouseEnter}
+        onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
         <img
           src={`https://image.tmdb.org/t/p/w500${movieData.image}`}
           alt={movieData.name}
-          loading="lazy"
+          loading="eager"
           onError={(e) => {
             e.target.src = "https://via.placeholder.com/300x450?text=No+Image";
           }}
@@ -62,57 +91,70 @@ export default function Card({ movieData }) {
         />
       </CardContainer>
 
-      {hoverCardVisible && (
-        <HoverCard style={{ top: position.top, left: position.left }}>
-          <div className="image-wrapper">
-            {trailerKey ? (
-              <iframe
-                title={movieData.name}
-                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=1&controls=0&loop=1&playlist=${trailerKey}`}
-                frameBorder="0"
-                allow="autoplay; fullscreen"
-                allowFullScreen
-              />
-            ) : (
-              <img
-                src={`https://image.tmdb.org/t/p/w500${movieData.image}`}
-                alt={movieData.name}
-                onError={(e) => {
-                  e.target.src =
-                    "https://via.placeholder.com/300x450?text=No+Image";
-                }}
-              />
-            )}
-          </div>
-          <div className="info-container">
-            <h3 onClick={() => navigate(`/player?trailer=${trailerKey || ""}`)}>
-              {movieData.name}
-            </h3>
-            <div className="icons">
-              <span>▶</span>
-              <span>👍</span>
-              <span>👎</span>
-              <span>✔</span>
-              <span>＋</span>
+      {hoverCardVisible &&
+        ReactDOM.createPortal(
+          <HoverCard
+            ref={hoverRef}
+            style={{ top: hoverPosition.top, left: hoverPosition.left }}
+            onMouseLeave={handleHoverCardMouseLeave}
+            onMouseEnter={() => setHoverCardVisible(true)}
+          >
+            <div className="image-video-wrapper">
+              {trailerKey ? (
+                <iframe
+                  title="movie trailer"
+                  src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=1&controls=0&loop=1&playlist=${trailerKey}`}
+                  frameBorder="0"
+                  allow="autoplay; fullscreen"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="no-trailer">
+                  <p>No video trailer available</p>
+                  <img
+                    src={`https://image.tmdb.org/t/p/w500${movieData.image}`}
+                    alt={movieData.name}
+                    onError={(e) => {
+                      e.target.src =
+                        "https://via.placeholder.com/300x450?text=No+Image";
+                    }}
+                  />
+                </div>
+              )}
             </div>
-            <div className="genres">
-              <ul>
-                {movieData.genres.map((genre, idx) => (
-                  <li key={idx}>{genre}</li>
-                ))}
-              </ul>
+
+            <div className="info-container">
+              <h3
+                onClick={() => navigate(`/player?trailer=${trailerKey || ""}`)}
+              >
+                {movieData.name}
+              </h3>
+              <div className="icons">
+                <IoPlayCircleSharp className="hover-icon" title="play" />
+                <RiThumbUpFill className="hover-icon" title="like" />
+                <RiThumbDownFill className="hover-icon" title="dislike" />
+                <BsCheck className="hover-icon" title="Remove from List" />
+                <AiOutlinePlus className="hover-icon" title="Add to my List" />
+              </div>
+              <div className="genres">
+                <ul>
+                  {movieData.genres.map((genre, idx) => (
+                    <li key={idx}>{genre}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
-        </HoverCard>
-      )}
+          </HoverCard>,
+          document.body
+        )}
     </>
   );
-}
+});
 
 const CardContainer = styled.div`
   flex: 0 0 auto;
-  width: 18%;
-  min-width: 180px;
+  max-width: 320px;
+  width: 100%;
   cursor: pointer;
   position: relative;
 
@@ -120,69 +162,94 @@ const CardContainer = styled.div`
     width: 100%;
     height: auto;
     border-radius: 0.3rem;
+    object-fit: cover;
     display: block;
-  }
-
-  @media (max-width: 1200px) {
-    width: 20%;
-  }
-  @media (max-width: 1024px) {
-    width: 22%;
-  }
-  @media (max-width: 768px) {
-    width: 28%;
-  }
-  @media (max-width: 480px) {
-    width: 40%;
   }
 `;
 
 const HoverCard = styled.div`
   position: fixed;
-  width: 250px;
-  max-width: 90%;
+  width: 90%;
+  max-width: 400px;
   background-color: #181818;
   border-radius: 0.3rem;
-  color: white;
-  padding: 0.5rem;
   z-index: 9999;
+  overflow: hidden;
 
-  .image-wrapper {
+  .image-video-wrapper {
     width: 100%;
-    height: 170px;
+    height: 300px;
+    overflow: hidden;
 
     img,
     iframe {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 0.2rem;
+    }
+
+    .no-trailer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      text-align: center;
+      p {
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      height: 250px;
+    }
+    @media (max-width: 768px) {
+      height: 200px;
+    }
+    @media (max-width: 480px) {
+      height: 150px;
     }
   }
 
   .info-container {
-    margin-top: 0.5rem;
-
+    padding: 1rem;
+    color: white;
     h3 {
-      font-size: 1rem;
       font-weight: bold;
-      margin: 0.3rem 0;
       cursor: pointer;
+      font-size: 1.2rem;
+    }
+  }
+
+  .icons .hover-icon {
+    font-size: 2.5rem;
+    color: white;
+    cursor: pointer;
+    margin-right: 5px;
+    &:hover {
+      color: #b8b8b8;
     }
 
-    .icons span {
-      margin-right: 5px;
-      cursor: pointer;
+    @media (max-width: 1024px) {
+      font-size: 2.2rem;
     }
+    @media (max-width: 768px) {
+      font-size: 1.8rem;
+    }
+    @media (max-width: 480px) {
+      font-size: 1.5rem;
+    }
+  }
 
-    .genres ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      font-size: 0.8rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
+  .genres ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 0;
+    font-size: 0.9rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
   }
 `;
