@@ -9,14 +9,13 @@ import { fetchMovies, getGenres } from "../store";
 
 const Netflix = () => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [heroMovie, setHeroMovie] = useState(null);
-
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const movies = useSelector((state) => state.netflix.movies);
   const genresLoaded = useSelector((state) => state.netflix.genresLoaded);
 
+  // Fetch genres and movies
   useEffect(() => {
     dispatch(getGenres());
   }, [dispatch]);
@@ -27,18 +26,17 @@ const Netflix = () => {
     }
   }, [genresLoaded, dispatch]);
 
-  // Pick a random movie for hero background
+  // Scroll listener
   useEffect(() => {
-    if (movies.length > 0) {
-      const randomIndex = Math.floor(Math.random() * movies.length);
-      setHeroMovie(movies[randomIndex]);
-    }
-  }, [movies]);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  window.onscroll = () => {
-    setIsScrolled(window.pageYOffset !== 0);
-    return () => (window.onscroll = null);
-  };
+  // Pick the first movie for hero (simpler than random)
+  const heroMovie = movies.length > 0 ? movies[0] : null;
 
   return (
     <HeroContainer>
@@ -53,19 +51,14 @@ const Netflix = () => {
           />
         )}
 
-        <div className="container">
-          <div className="title">
-            <h1>{heroMovie?.name}</h1>
-            <p>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit
-              maiores illo, explicabo doloremque quia doloribus.
-            </p>
-          </div>
+        <div className="hero-content">
+          <h1>{heroMovie?.name}</h1>
+          <p>Welcome to Netflix! Enjoy the latest movies and shows.</p>
           <div className="buttons">
-            <button onClick={() => navigate("/player")} className="playBtn">
+            <button className="play" onClick={() => navigate("/player")}>
               Play
             </button>
-            <button className="moreBtn">More</button>
+            <button className="more">More</button>
           </div>
         </div>
       </div>
@@ -76,108 +69,80 @@ const Netflix = () => {
 };
 
 const HeroContainer = styled.div`
-.hero {
-  position: relative;
+  .hero {
+    position: relative;
 
-  .background-image {
-    width: 100%;
-    height: 70vh;
-    object-fit: cover;
-    filter: brightness(40%);
-  }
+    .background-image {
+      width: 100%;
+      height: 70vh;
+      object-fit: cover;
+      filter: brightness(40%);
+    }
 
-  .container {
-    position: absolute;
-    bottom: 2rem;
-    left: 2rem;
-
-    .title {
+    .hero-content {
+      position: absolute;
+      bottom: 2rem;
+      left: 2rem;
       color: white;
+
       h1 {
-        font-size: 4rem;
+        font-size: 3rem;
         margin-bottom: 1rem;
       }
+
       p {
-        max-width: 600px;
-        font-size: 1.2rem;
-      }
-    }
-
-    .buttons {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-
-      .playBtn,
-      .moreBtn {
-        border: none;
-        border-radius: 0.3rem;
-        font-weight: bold;
-        font-size: 1.2rem;
-        padding: 0.8rem 2rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
+        font-size: 1rem;
+        max-width: 500px;
       }
 
-      .playBtn {
-        background-color: red;
-        color: white;
-      }
-
-      .moreBtn {
-        background-color: rgba(109, 109, 110, 0.7);
-        color: white;
-      }
-
-      .playBtn:hover {
-        background-color: #e50914;
-      }
-
-      .moreBtn:hover {
-        background-color: rgba(109, 109, 110, 0.4);
-      }
-    }
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 1024px) {
-    .container {
-      left: 1rem;
-      .title {
-        h1 {
-          font-size: 3rem;
-        }
-        p {
-          font-size: 1rem;
-        }
-      }
       .buttons {
-        .playBtn,
-        .moreBtn {
-          font-size: 1rem;
-          padding: 0.6rem 1.5rem;
+        margin-top: 1rem;
+        display: flex;
+        gap: 1rem;
+
+        button {
+          border: none;
+          border-radius: 0.3rem;
+          font-weight: bold;
+          padding: 0.7rem 1.5rem;
+          cursor: pointer;
+          transition: background 0.3s;
+        }
+
+        .play {
+          background-color: red;
+          color: white;
+        }
+
+        .more {
+          background-color: rgba(109, 109, 110, 0.7);
+          color: white;
+        }
+
+        button:hover {
+          opacity: 0.8;
         }
       }
     }
   }
 
   @media (max-width: 768px) {
-    .container {
+    .hero-content {
+      left: 1rem;
       bottom: 1rem;
-      .title {
-        h1 {
-          font-size: 2.5rem;
-        }
-        p {
-          font-size: 0.9rem;
-        }
+
+      h1 {
+        font-size: 2rem;
       }
+
+      p {
+        font-size: 0.85rem;
+      }
+
       .buttons {
         flex-direction: column;
         gap: 0.5rem;
-
-        .playBtn,
-        .moreBtn {
+        button {
           width: 120px;
         }
       }
@@ -185,25 +150,23 @@ const HeroContainer = styled.div`
   }
 
   @media (max-width: 480px) {
-    .container {
-      .title {
-        h1 {
-          font-size: 1.8rem;
-        }
-        p {
-          font-size: 0.8rem;
-        }
+    .hero-content {
+      h1 {
+        font-size: 1.5rem;
       }
+
+      p {
+        font-size: 0.75rem;
+      }
+
       .buttons {
-        .playBtn,
-        .moreBtn {
+        button {
           width: 100px;
-          font-size: 0.9rem;
+          font-size: 0.85rem;
         }
       }
     }
   }
-}
 `;
 
 export default Netflix;

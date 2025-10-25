@@ -2,7 +2,8 @@ import React from "react";
 import styled from "styled-components";
 import MovieSlider from "./MovieSlider";
 
-const SliderContainer = ({ movies }) => {
+export default function SliderContainer({ movies }) {
+  // Helper to slice movies for each row
   const getMoviesBetween = (start, end) => movies.slice(start, end);
 
   return (
@@ -17,8 +18,10 @@ const SliderContainer = ({ movies }) => {
       <MovieSlider data={getMoviesBetween(70, 80)} title="Action Movies" />
     </Wrapper>
   );
-};
+}
 
-const Wrapper = styled.div``;
-
-export default SliderContainer;
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+`;
