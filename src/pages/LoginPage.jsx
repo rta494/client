@@ -28,10 +28,12 @@ const LoginPage = () => {
 
   return (
     <Wrapper>
-      <BackgroundImage />
-      <div className="loginContent">
+      {/* ✅ Pass background image URL */}
+      <BackgroundImage src="https://assets.nflxext.com/ffe/siteui/vlv3/4f98e4a2-34a1-4f8b-9b18-55a1f381cc06/baaf6f49-60a5-48a5-97b5-63b9b1956b4e/US-en-20240930-popsignuptwoweeks-perspective_alpha_website_small.jpg" />
+
+      <div className="overlay">
         <Header />
-        <div className="form-wrapper">
+        <div className="form-container">
           <div className="form">
             <h1>Sign In</h1>
             <div className="inputs">
@@ -52,7 +54,10 @@ const LoginPage = () => {
 
             <div className="help-text">
               <span>
-                New to Netflix? <a href="/signup">Sign up now.</a>
+                New to Netflix?{" "}
+                <a href="/signup" className="link">
+                  Sign up now.
+                </a>
               </span>
             </div>
           </div>
@@ -70,126 +75,106 @@ const Wrapper = styled.div`
   width: 100vw;
   overflow: hidden;
 
-  .loginContent {
+  .overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1; /* ensures above background */
-    background-color: rgba(0, 0, 0, 0.7);
-    height: 100%;
-    width: 100%;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.65);
+    z-index: 1;
     display: flex;
     flex-direction: column;
+  }
 
-    /* Keep header at top, form centered below */
-    justify-content: flex-start;
+  .form-container {
+    flex: 1;
+    display: flex;
     align-items: center;
-    padding-top: 6rem; /* space for header */
+    justify-content: center;
+  }
 
-    .form-wrapper {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex: 1;
+  .form {
+    background-color: rgba(0, 0, 0, 0.85);
+    padding: 3rem 2.5rem;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    color: white;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.6);
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
     }
 
-    .form {
-      background-color: rgba(0, 0, 0, 0.85);
-      padding: 3rem 2.5rem;
-      border-radius: 8px;
-      width: 100%;
-      max-width: 400px;
+    .inputs {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1rem;
+    }
+
+    input {
+      padding: 1rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      border: none;
+      outline: none;
+      background-color: #333;
       color: white;
+    }
 
-      h1 {
-        text-align: center;
-        font-size: 2rem;
-        font-weight: bold;
-      }
+    input::placeholder {
+      color: #aaa;
+    }
 
-      .inputs {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-      }
+    button {
+      margin-top: 1rem;
+      padding: 1rem;
+      font-size: 1rem;
+      background-color: #e50914;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
 
-      input {
-        padding: 1rem;
-        font-size: 1rem;
-        border-radius: 4px;
-        border: none;
-        outline: none;
-        background-color: #333;
+    button:hover {
+      background-color: #f40612;
+      transform: scale(1.03);
+    }
+
+    .help-text {
+      text-align: center;
+      color: #b3b3b3;
+      font-size: 0.9rem;
+
+      .link {
         color: white;
-      }
-
-      input::placeholder {
-        color: #aaa;
-      }
-
-      button {
-        margin-top: 1rem;
-        padding: 1rem;
-        font-size: 1rem;
-        background-color: #e50914;
-        border: none;
-        border-radius: 4px;
-        color: white;
+        text-decoration: none;
         font-weight: bold;
-        cursor: pointer;
-        transition: 0.2s ease;
+        margin-left: 4px;
       }
 
-      button:hover {
-        background-color: #f40612;
-        transform: scale(1.03);
-      }
-
-      .help-text {
-        text-align: center;
-        color: #b3b3b3;
-        font-size: 0.9rem;
-
-        a {
-          color: white;
-          text-decoration: none;
-          font-weight: bold;
-          margin-left: 4px;
-        }
-
-        a:hover {
-          text-decoration: underline;
-        }
+      .link:hover {
+        text-decoration: underline;
       }
     }
   }
 
-  /* Responsive adjustments */
   @media (max-width: 768px) {
-    .loginContent {
-      padding-top: 4rem;
-    }
     .form {
       padding: 2rem 1.5rem;
-    }
-    .form h1 {
-      font-size: 1.6rem;
     }
   }
 
   @media (max-width: 480px) {
-    .loginContent .form {
+    .form {
       max-width: 90%;
       padding: 1.5rem;
-    }
-    .form input,
-    .form button {
-      font-size: 0.9rem;
-      padding: 0.8rem;
     }
   }
 `;
