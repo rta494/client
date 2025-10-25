@@ -6,46 +6,27 @@ import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 export default function MovieSlider({ data, title }) {
   const listRef = useRef();
   const [controlVisible, setControlVisible] = useState(false);
-  const [scrollAmount, setScrollAmount] = useState(210);
+  const [cardWidth, setCardWidth] = useState(200); // default width
 
-  // For touch events
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
-
+  // Update card width on resize for responsive scrolling
   useEffect(() => {
-    const updateScrollAmount = () => {
-      const firstCard = listRef.current?.children[0];
-      if (firstCard) {
-        setScrollAmount(firstCard.offsetWidth + 10); // card width + gap
+    const updateWidth = () => {
+      if (listRef.current) {
+        const firstCard = listRef.current.children[0];
+        setCardWidth(firstCard ? firstCard.offsetWidth + 10 : 210);
       }
     };
-    updateScrollAmount();
-    window.addEventListener("resize", updateScrollAmount);
-    return () => window.removeEventListener("resize", updateScrollAmount);
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
   }, [data]);
 
   const scroll = (direction) => {
     if (!listRef.current) return;
     listRef.current.scrollBy({
-      left: direction === "right" ? scrollAmount : -scrollAmount,
+      left: direction === "right" ? cardWidth : -cardWidth,
       behavior: "smooth",
     });
-  };
-
-  // Swipe handlers
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    const delta = touchStartX.current - touchEndX.current;
-    if (Math.abs(delta) > 50) {
-      scroll(delta > 0 ? "right" : "left");
-    }
   };
 
   return (
@@ -54,12 +35,7 @@ export default function MovieSlider({ data, title }) {
       onMouseLeave={() => setControlVisible(false)}
     >
       <h2>{title}</h2>
-      <div
-        className="slider-wrapper"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
+      <div className="slider-wrapper">
         <button
           className={`slider-action left ${!controlVisible ? "hidden" : ""}`}
           onClick={() => scroll("left")}
@@ -146,9 +122,10 @@ const Container = styled.div`
   /* Responsive adjustments */
   @media (max-width: 1024px) {
     h2 {
+      margin-left: 0.5rem;
       font-size: 1.1rem;
     }
-    .slider-action {
+    .slider-wrapper .slider-action {
       width: 30px;
       height: 50px;
       svg {
@@ -158,12 +135,9 @@ const Container = styled.div`
   }
 
   @media (max-width: 768px) {
-    h2 {
-      font-size: 1rem;
-    }
-    .slider-action {
+    .slider-wrapper .slider-action {
       width: 25px;
-      height: 40px;
+      height: 45px;
       svg {
         font-size: 1.1rem;
       }
@@ -171,14 +145,16 @@ const Container = styled.div`
   }
 
   @media (max-width: 480px) {
-    h2 {
-      font-size: 0.9rem;
-    }
-    .slider-action {
-      width: 20px;
-      height: 35px;
-      svg {
-        font-size: 1rem;
+    .slider-wrapper {
+      .slider {
+        padding-left: 0.5rem;
+      }
+      .slider-action {
+        width: 20px;
+        height: 40px;
+        svg {
+          font-size: 1rem;
+        }
       }
     }
   }

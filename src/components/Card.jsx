@@ -1,63 +1,74 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import axios from "axios";
+import { MY_API_KEY, TMDB_BASE_URL } from "../utils/constant";
 
 export default function Card({ movieData }) {
-  const [hoverCardVisible, setHoverCardVisible] = useState(false);
+  const [hover, setHover] = useState(false);
+  const [trailerKey, setTrailerKey] = useState(null);
   const navigate = useNavigate();
+
+  // Fetch trailer for the movie
+  useEffect(() => {
+    if (movieData.id) {
+      const fetchTrailer = async () => {
+        try {
+          const { data } = await axios.get(
+            `${TMDB_BASE_URL}/movie/${movieData.id}/videos?api_key=${MY_API_KEY}&language=en-US`
+          );
+          const trailer = data.results.find(
+            (v) => v.type === "Trailer" && v.site === "YouTube"
+          );
+          setTrailerKey(trailer ? trailer.key : null);
+        } catch {
+          setTrailerKey(null);
+        }
+      };
+      fetchTrailer();
+    }
+  }, [movieData.id]);
 
   return (
     <CardContainer
-      onMouseEnter={() => setHoverCardVisible(true)}
-      onMouseLeave={() => setHoverCardVisible(false)}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
     >
       <img
         src={`https://image.tmdb.org/t/p/w500${movieData.image}`}
         alt={movieData.name}
         loading="lazy"
+        onClick={() => navigate(`/player?trailer=${trailerKey || ""}`)}
         onError={(e) => {
           e.target.src = "https://via.placeholder.com/300x450?text=No+Image";
         }}
-        onClick={() =>
-          navigate(`/player?trailer=${movieData.trailerKey || ""}`)
-        }
       />
 
-      {hoverCardVisible && (
+      {hover && (
         <HoverCard>
-          <div className="image-wrapper">
+          {trailerKey ? (
+            <iframe
+              title="trailer"
+              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=1`}
+              frameBorder="0"
+              allow="autoplay; fullscreen"
+            />
+          ) : (
             <img
               src={`https://image.tmdb.org/t/p/w500${movieData.image}`}
               alt={movieData.name}
-              loading="lazy"
               onError={(e) => {
                 e.target.src =
                   "https://via.placeholder.com/300x450?text=No+Image";
               }}
             />
-          </div>
-          <div className="info-container">
-            <h3
-              onClick={() =>
-                navigate(`/player?trailer=${movieData.trailerKey || ""}`)
-              }
-            >
+          )}
+
+          <div className="info">
+            <h3 onClick={() => navigate(`/player?trailer=${trailerKey || ""}`)}>
               {movieData.name}
             </h3>
-            <div className="icons">
-              <span>▶</span>
-              <span>👍</span>
-              <span>👎</span>
-              <span>✔</span>
-              <span>＋</span>
-            </div>
-            <div className="genres">
-              <ul>
-                {movieData.genres.map((genre, idx) => (
-                  <li key={idx}>{genre}</li>
-                ))}
-              </ul>
-            </div>
+            <div className="genres">{movieData.genres.join(", ")}</div>
           </div>
         </HoverCard>
       )}
@@ -66,69 +77,47 @@ export default function Card({ movieData }) {
 }
 
 const CardContainer = styled.div`
-  flex: 0 0 auto;
-  width: 150px;
-  cursor: pointer;
   position: relative;
+  width: 200px;
+  cursor: pointer;
 
   img {
     width: 100%;
-    height: auto;
     border-radius: 0.3rem;
-    display: block;
-  }
-
-  @media (min-width: 480px) {
-    width: 180px;
-  }
-  @media (min-width: 768px) {
-    width: 220px;
-  }
-  @media (min-width: 1024px) {
-    width: 250px;
   }
 `;
 
 const HoverCard = styled.div`
   position: absolute;
-  top: -310px;
+  top: -250px;
   left: 0;
-  width: 100%;
-  max-width: 250px;
-  background-color: #181818;
+  width: 200px;
+  background: #181818;
   border-radius: 0.3rem;
   color: white;
   padding: 0.5rem;
   z-index: 10;
 
-  .image-wrapper img {
+  img,
+  iframe {
     width: 100%;
+    height: 150px;
+    object-fit: cover;
     border-radius: 0.2rem;
   }
 
-  .info-container {
+  .info {
     margin-top: 0.5rem;
 
     h3 {
       font-size: 1rem;
-      font-weight: bold;
       margin: 0.3rem 0;
       cursor: pointer;
     }
 
-    .icons span {
-      margin-right: 5px;
-      cursor: pointer;
-    }
-
-    .genres ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
+    .genres {
       font-size: 0.8rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
+      color: #b8b8b8;
     }
   }
 `;
