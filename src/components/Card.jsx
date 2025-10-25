@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import axios from "axios";
@@ -7,9 +7,10 @@ import { MY_API_KEY, TMDB_BASE_URL } from "../utils/constant";
 export default function Card({ movieData }) {
   const [hoverCardVisible, setHoverCardVisible] = useState(false);
   const [trailerKey, setTrailerKey] = useState(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const cardRef = useRef();
   const navigate = useNavigate();
 
-  // Fetch trailer dynamically
   useEffect(() => {
     const fetchTrailer = async () => {
       try {
@@ -28,23 +29,41 @@ export default function Card({ movieData }) {
     if (movieData.id) fetchTrailer();
   }, [movieData.id]);
 
+  const handleMouseEnter = (e) => {
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.top - 310 > 0 ? rect.top - 310 : rect.bottom + 10,
+        left: rect.left,
+      });
+    }
+    setHoverCardVisible(true);
+  };
+
+  const handleMouseLeave = () => {
+    setHoverCardVisible(false);
+  };
+
   return (
-    <CardContainer
-      onMouseEnter={() => setHoverCardVisible(true)}
-      onMouseLeave={() => setHoverCardVisible(false)}
-    >
-      <img
-        src={`https://image.tmdb.org/t/p/w500${movieData.image}`}
-        alt={movieData.name}
-        loading="lazy"
-        onError={(e) => {
-          e.target.src = "https://via.placeholder.com/300x450?text=No+Image";
-        }}
-        onClick={() => navigate(`/player?trailer=${trailerKey || ""}`)}
-      />
+    <>
+      <CardContainer
+        ref={cardRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <img
+          src={`https://image.tmdb.org/t/p/w500${movieData.image}`}
+          alt={movieData.name}
+          loading="lazy"
+          onError={(e) => {
+            e.target.src = "https://via.placeholder.com/300x450?text=No+Image";
+          }}
+          onClick={() => navigate(`/player?trailer=${trailerKey || ""}`)}
+        />
+      </CardContainer>
 
       {hoverCardVisible && (
-        <HoverCard>
+        <HoverCard style={{ top: position.top, left: position.left }}>
           <div className="image-wrapper">
             {trailerKey ? (
               <iframe
@@ -65,7 +84,6 @@ export default function Card({ movieData }) {
               />
             )}
           </div>
-
           <div className="info-container">
             <h3 onClick={() => navigate(`/player?trailer=${trailerKey || ""}`)}>
               {movieData.name}
@@ -87,7 +105,7 @@ export default function Card({ movieData }) {
           </div>
         </HoverCard>
       )}
-    </CardContainer>
+    </>
   );
 }
 
@@ -120,16 +138,14 @@ const CardContainer = styled.div`
 `;
 
 const HoverCard = styled.div`
-  position: absolute;
-  top: -310px;
-  left: 0;
-  width: 100%;
-  max-width: 300px;
+  position: fixed;
+  width: 250px;
+  max-width: 90%;
   background-color: #181818;
   border-radius: 0.3rem;
   color: white;
   padding: 0.5rem;
-  z-index: 10;
+  z-index: 9999;
 
   .image-wrapper {
     width: 100%;
