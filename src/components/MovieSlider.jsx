@@ -6,25 +6,25 @@ import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 export default function MovieSlider({ data, title }) {
   const listRef = useRef();
   const [controlVisible, setControlVisible] = useState(false);
-  const [cardWidth, setCardWidth] = useState(200); // default width
+  const [cardWidth, setCardWidth] = useState(0);
 
-  // Update card width on resize for responsive scrolling
+  // Dynamically calculate card width
   useEffect(() => {
-    const updateWidth = () => {
-      if (listRef.current) {
+    const updateCardWidth = () => {
+      if (listRef.current && listRef.current.children.length > 0) {
         const firstCard = listRef.current.children[0];
-        setCardWidth(firstCard ? firstCard.offsetWidth + 10 : 210);
+        setCardWidth(firstCard.offsetWidth + 10); // include gap
       }
     };
-    updateWidth();
-    window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
+    updateCardWidth();
+    window.addEventListener("resize", updateCardWidth);
+    return () => window.removeEventListener("resize", updateCardWidth);
   }, [data]);
 
   const scroll = (direction) => {
     if (!listRef.current) return;
     listRef.current.scrollBy({
-      left: direction === "right" ? cardWidth : -cardWidth,
+      left: direction === "right" ? cardWidth * 2 : -cardWidth * 2, // scroll 2 cards at a time
       behavior: "smooth",
     });
   };
@@ -67,7 +67,7 @@ const Container = styled.div`
   h2 {
     margin-left: 1rem;
     color: white;
-    font-size: 1.2rem;
+    font-size: 1.5rem;
   }
 
   .slider-wrapper {
@@ -92,8 +92,8 @@ const Container = styled.div`
       top: 50%;
       transform: translateY(-50%);
       z-index: 10;
-      width: 35px;
-      height: 60px;
+      width: 40px;
+      height: 70px;
       background: rgba(0, 0, 0, 0.5);
       border: none;
       cursor: pointer;
@@ -104,7 +104,7 @@ const Container = styled.div`
 
       svg {
         color: white;
-        font-size: 1.5rem;
+        font-size: 1.8rem;
       }
 
       &.left {
@@ -119,12 +119,17 @@ const Container = styled.div`
     }
   }
 
-  /* Responsive adjustments */
   @media (max-width: 1024px) {
-    h2 {
-      margin-left: 0.5rem;
-      font-size: 1.1rem;
+    .slider-wrapper .slider-action {
+      width: 35px;
+      height: 60px;
+      svg {
+        font-size: 1.5rem;
+      }
     }
+  }
+
+  @media (max-width: 768px) {
     .slider-wrapper .slider-action {
       width: 30px;
       height: 50px;
@@ -134,27 +139,16 @@ const Container = styled.div`
     }
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 480px) {
+    h2 {
+      font-size: 1.2rem;
+      margin-left: 0.5rem;
+    }
     .slider-wrapper .slider-action {
       width: 25px;
-      height: 45px;
+      height: 40px;
       svg {
-        font-size: 1.1rem;
-      }
-    }
-  }
-
-  @media (max-width: 480px) {
-    .slider-wrapper {
-      .slider {
-        padding-left: 0.5rem;
-      }
-      .slider-action {
-        width: 20px;
-        height: 40px;
-        svg {
-          font-size: 1rem;
-        }
+        font-size: 1rem;
       }
     }
   }
