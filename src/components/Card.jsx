@@ -1,10 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import axios from "axios";
+import { MY_API_KEY, TMDB_BASE_URL } from "../utils/constant";
 
 export default function Card({ movieData }) {
   const [hoverCardVisible, setHoverCardVisible] = useState(false);
+  const [trailerKey, setTrailerKey] = useState(null);
   const navigate = useNavigate();
+
+  // Fetch trailer dynamically
+  useEffect(() => {
+    const fetchTrailer = async () => {
+      try {
+        const { data } = await axios.get(
+          `${TMDB_BASE_URL}/movie/${movieData.id}/videos?api_key=${MY_API_KEY}&language=en-US`
+        );
+        const trailer = data.results.find(
+          (vid) => vid.type === "Trailer" && vid.site === "YouTube"
+        );
+        setTrailerKey(trailer ? trailer.key : null);
+      } catch {
+        setTrailerKey(null);
+      }
+    };
+
+    if (movieData.id) fetchTrailer();
+  }, [movieData.id]);
 
   return (
     <CardContainer
@@ -18,30 +40,34 @@ export default function Card({ movieData }) {
         onError={(e) => {
           e.target.src = "https://via.placeholder.com/300x450?text=No+Image";
         }}
-        onClick={() =>
-          navigate(`/player?trailer=${movieData.trailerKey || ""}`)
-        }
+        onClick={() => navigate(`/player?trailer=${trailerKey || ""}`)}
       />
 
       {hoverCardVisible && (
         <HoverCard>
           <div className="image-wrapper">
-            <img
-              src={`https://image.tmdb.org/t/p/w500${movieData.image}`}
-              alt={movieData.name}
-              loading="lazy"
-              onError={(e) => {
-                e.target.src =
-                  "https://via.placeholder.com/300x450?text=No+Image";
-              }}
-            />
+            {trailerKey ? (
+              <iframe
+                title={movieData.name}
+                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=1&controls=0&loop=1&playlist=${trailerKey}`}
+                frameBorder="0"
+                allow="autoplay; fullscreen"
+                allowFullScreen
+              />
+            ) : (
+              <img
+                src={`https://image.tmdb.org/t/p/w500${movieData.image}`}
+                alt={movieData.name}
+                onError={(e) => {
+                  e.target.src =
+                    "https://via.placeholder.com/300x450?text=No+Image";
+                }}
+              />
+            )}
           </div>
+
           <div className="info-container">
-            <h3
-              onClick={() =>
-                navigate(`/player?trailer=${movieData.trailerKey || ""}`)
-              }
-            >
+            <h3 onClick={() => navigate(`/player?trailer=${trailerKey || ""}`)}>
               {movieData.name}
             </h3>
             <div className="icons">
@@ -67,8 +93,8 @@ export default function Card({ movieData }) {
 
 const CardContainer = styled.div`
   flex: 0 0 auto;
-  width: 18%; /* Large on desktop, ~5 cards per row */
-  min-width: 180px; /* prevents being too small */
+  width: 18%;
+  min-width: 180px;
   cursor: pointer;
   position: relative;
 
@@ -82,17 +108,14 @@ const CardContainer = styled.div`
   @media (max-width: 1200px) {
     width: 20%;
   }
-
   @media (max-width: 1024px) {
     width: 22%;
   }
-
   @media (max-width: 768px) {
     width: 28%;
   }
-
   @media (max-width: 480px) {
-    width: 40%; /* show ~2–3 cards per screen */
+    width: 40%;
   }
 `;
 
@@ -108,9 +131,17 @@ const HoverCard = styled.div`
   padding: 0.5rem;
   z-index: 10;
 
-  .image-wrapper img {
+  .image-wrapper {
     width: 100%;
-    border-radius: 0.2rem;
+    height: 170px;
+
+    img,
+    iframe {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 0.2rem;
+    }
   }
 
   .info-container {
