@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -229,21 +229,36 @@ const HoverCard = styled.div`
   }
 
   .icons .controls .hover-icon {
-    font-size: 2.5rem;
+    font-size: 3rem; /* base size */
     color: white;
     cursor: pointer;
+    transition: font-size 0.3s ease;
+
     &:hover {
       color: #b8b8b8;
     }
 
     @media (max-width: 1024px) {
-      font-size: 2.2rem;
+      font-size: 2.5rem;
     }
     @media (max-width: 768px) {
-      font-size: 1.8rem;
+      font-size: 2rem;
     }
     @media (max-width: 480px) {
       font-size: 1.5rem;
     }
+  }
+
+  .genres ul {
+    list-style: none; /* removes bullets */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    padding: 0;
+    margin: 0;
+  }
+
+  .genres ul li {
+    font-size: 0.95rem;
   }
 `;
