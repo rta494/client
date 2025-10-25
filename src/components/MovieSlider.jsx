@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Card from "./Card";
 import styled from "styled-components";
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
@@ -6,14 +6,46 @@ import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 export default function MovieSlider({ data, title }) {
   const listRef = useRef();
   const [controlVisible, setControlVisible] = useState(false);
-  const CARD_WIDTH = 210; // width + gap
+  const [scrollAmount, setScrollAmount] = useState(210);
+
+  // For touch events
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  useEffect(() => {
+    const updateScrollAmount = () => {
+      const firstCard = listRef.current?.children[0];
+      if (firstCard) {
+        setScrollAmount(firstCard.offsetWidth + 10); // card width + gap
+      }
+    };
+    updateScrollAmount();
+    window.addEventListener("resize", updateScrollAmount);
+    return () => window.removeEventListener("resize", updateScrollAmount);
+  }, [data]);
 
   const scroll = (direction) => {
     if (!listRef.current) return;
     listRef.current.scrollBy({
-      left: direction === "right" ? CARD_WIDTH : -CARD_WIDTH,
+      left: direction === "right" ? scrollAmount : -scrollAmount,
       behavior: "smooth",
     });
+  };
+
+  // Swipe handlers
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const delta = touchStartX.current - touchEndX.current;
+    if (Math.abs(delta) > 50) {
+      scroll(delta > 0 ? "right" : "left");
+    }
   };
 
   return (
@@ -22,9 +54,14 @@ export default function MovieSlider({ data, title }) {
       onMouseLeave={() => setControlVisible(false)}
     >
       <h2>{title}</h2>
-      <div className="slider-wrapper">
+      <div
+        className="slider-wrapper"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <button
-          className={`slider-action left ${controlVisible ? "" : "hidden"}`}
+          className={`slider-action left ${!controlVisible ? "hidden" : ""}`}
           onClick={() => scroll("left")}
         >
           <AiOutlineLeft />
@@ -37,7 +74,7 @@ export default function MovieSlider({ data, title }) {
         </div>
 
         <button
-          className={`slider-action right ${controlVisible ? "" : "hidden"}`}
+          className={`slider-action right ${!controlVisible ? "hidden" : ""}`}
           onClick={() => scroll("right")}
         >
           <AiOutlineRight />
@@ -69,14 +106,6 @@ const Container = styled.div`
       padding-left: 1rem;
       scroll-behavior: smooth;
 
-      /* Netflix-style snapping */
-      scroll-snap-type: x mandatory;
-
-      & > * {
-        flex: 0 0 auto;
-        scroll-snap-align: start;
-      }
-
       &::-webkit-scrollbar {
         display: none;
       }
@@ -95,6 +124,7 @@ const Container = styled.div`
       display: flex;
       justify-content: center;
       align-items: center;
+      border-radius: 0.3rem;
 
       svg {
         color: white;
@@ -109,6 +139,46 @@ const Container = styled.div`
       }
       &.hidden {
         display: none;
+      }
+    }
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 1024px) {
+    h2 {
+      font-size: 1.1rem;
+    }
+    .slider-action {
+      width: 30px;
+      height: 50px;
+      svg {
+        font-size: 1.3rem;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    h2 {
+      font-size: 1rem;
+    }
+    .slider-action {
+      width: 25px;
+      height: 40px;
+      svg {
+        font-size: 1.1rem;
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    h2 {
+      font-size: 0.9rem;
+    }
+    .slider-action {
+      width: 20px;
+      height: 35px;
+      svg {
+        font-size: 1rem;
       }
     }
   }

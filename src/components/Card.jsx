@@ -67,7 +67,7 @@ export default function Card({ movieData }) {
 
 const CardContainer = styled.div`
   flex: 0 0 auto;
-  width: 200px;
+  width: 150px;
   cursor: pointer;
   position: relative;
 
@@ -77,13 +77,24 @@ const CardContainer = styled.div`
     border-radius: 0.3rem;
     display: block;
   }
+
+  @media (min-width: 480px) {
+    width: 180px;
+  }
+  @media (min-width: 768px) {
+    width: 220px;
+  }
+  @media (min-width: 1024px) {
+    width: 250px;
+  }
 `;
 
 const HoverCard = styled.div`
   position: absolute;
   top: -310px;
   left: 0;
-  width: 200px;
+  width: 100%;
+  max-width: 250px;
   background-color: #181818;
   border-radius: 0.3rem;
   color: white;
