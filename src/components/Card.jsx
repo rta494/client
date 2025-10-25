@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import axios from "axios";
+
 import { IoPlayCircleSharp } from "react-icons/io5";
 import { AiOutlinePlus } from "react-icons/ai";
 import { RiThumbUpFill, RiThumbDownFill } from "react-icons/ri";
@@ -10,7 +11,7 @@ import { BsCheck } from "react-icons/bs";
 
 import { MY_API_KEY, TMDB_BASE_URL } from "../utils/constant";
 
-export default React.memo(function Card({ movieData }) {
+export default function Card({ movieData }) {
   const [hoverCardVisible, setHoverCardVisible] = useState(false);
   const [hoverPosition, setHoverPosition] = useState({ top: 0, left: 0 });
   const [trailerKey, setTrailerKey] = useState(null);
@@ -51,6 +52,7 @@ export default React.memo(function Card({ movieData }) {
   };
 
   const handleMouseEnter = () => setHoverCardVisible(true);
+
   const handleMouseLeave = (e) => {
     if (
       !e.relatedTarget ||
@@ -61,6 +63,7 @@ export default React.memo(function Card({ movieData }) {
       setHoverCardVisible(false);
     }
   };
+
   const handleHoverCardMouseLeave = (e) => {
     if (
       !e.relatedTarget ||
@@ -87,7 +90,7 @@ export default React.memo(function Card({ movieData }) {
           onError={(e) => {
             e.target.src = "https://via.placeholder.com/300x450?text=No+Image";
           }}
-          onClick={() => navigate(`/player?trailer=${trailerKey || ""}`)}
+          onClick={() => navigate(`/player?trailer=${trailerKey || "none"}`)}
         />
       </CardContainer>
 
@@ -109,32 +112,24 @@ export default React.memo(function Card({ movieData }) {
                   allowFullScreen
                 />
               ) : (
-                <div className="no-trailer">
-                  <p>No video trailer available</p>
-                  <img
-                    src={`https://image.tmdb.org/t/p/w500${movieData.image}`}
-                    alt={movieData.name}
-                    onError={(e) => {
-                      e.target.src =
-                        "https://via.placeholder.com/300x450?text=No+Image";
-                    }}
-                  />
-                </div>
+                <div className="no-video">No video trailer available</div>
               )}
             </div>
 
             <div className="info-container">
               <h3
-                onClick={() => navigate(`/player?trailer=${trailerKey || ""}`)}
+                onClick={() =>
+                  navigate(`/player?trailer=${trailerKey || "none"}`)
+                }
               >
                 {movieData.name}
               </h3>
               <div className="icons">
-                <IoPlayCircleSharp className="hover-icon" title="play" />
-                <RiThumbUpFill className="hover-icon" title="like" />
-                <RiThumbDownFill className="hover-icon" title="dislike" />
-                <BsCheck className="hover-icon" title="Remove from List" />
-                <AiOutlinePlus className="hover-icon" title="Add to my List" />
+                <IoPlayCircleSharp title="play" />
+                <RiThumbUpFill title="like" />
+                <RiThumbDownFill title="dislike" />
+                <BsCheck title="Remove from List" />
+                <AiOutlinePlus title="Add to my List" />
               </div>
               <div className="genres">
                 <ul>
@@ -149,7 +144,7 @@ export default React.memo(function Card({ movieData }) {
         )}
     </>
   );
-});
+}
 
 const CardContainer = styled.div`
   flex: 0 0 auto;
@@ -179,27 +174,21 @@ const HoverCard = styled.div`
   .image-video-wrapper {
     width: 100%;
     height: 300px;
-    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #111;
 
-    img,
     iframe {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
-    .no-trailer {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+    .no-video {
       color: white;
-      font-weight: bold;
       font-size: 1rem;
       text-align: center;
-      p {
-        margin-bottom: 0.5rem;
-      }
     }
 
     @media (max-width: 1024px) {
@@ -216,40 +205,45 @@ const HoverCard = styled.div`
   .info-container {
     padding: 1rem;
     color: white;
+
     h3 {
       font-weight: bold;
       cursor: pointer;
       font-size: 1.2rem;
     }
-  }
 
-  .icons .hover-icon {
-    font-size: 2.5rem;
-    color: white;
-    cursor: pointer;
-    margin-right: 5px;
-    &:hover {
-      color: #b8b8b8;
+    .icons {
+      display: flex;
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+
+      svg {
+        font-size: 2rem;
+        cursor: pointer;
+        &:hover {
+          color: #b8b8b8;
+        }
+
+        @media (max-width: 1024px) {
+          font-size: 1.8rem;
+        }
+        @media (max-width: 768px) {
+          font-size: 1.5rem;
+        }
+        @media (max-width: 480px) {
+          font-size: 1.2rem;
+        }
+      }
     }
 
-    @media (max-width: 1024px) {
-      font-size: 2.2rem;
+    .genres ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      font-size: 0.8rem;
     }
-    @media (max-width: 768px) {
-      font-size: 1.8rem;
-    }
-    @media (max-width: 480px) {
-      font-size: 1.5rem;
-    }
-  }
-
-  .genres ul {
-    list-style: none;
-    padding: 0;
-    margin: 0.5rem 0 0 0;
-    font-size: 0.9rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
   }
 `;

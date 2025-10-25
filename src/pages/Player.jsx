@@ -11,11 +11,6 @@ const Player = () => {
   const searchParams = new URLSearchParams(location.search);
   const trailerKey = searchParams.get("trailer");
 
-  // Fallback video if no trailerKey
-  const youtubeUrl = trailerKey
-    ? `https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=1`
-    : "https://res.cloudinary.com/ehizeex-shop/video/upload/v1668377666/NetflixApp/Action_mlw9wx.mp4";
-
   return (
     <PlayContainer>
       <div className="player">
@@ -23,18 +18,18 @@ const Player = () => {
           <BsArrowLeft onClick={() => navigate(-1)} />
         </div>
 
-        {trailerKey ? (
+        {trailerKey && trailerKey !== "none" ? (
           <iframe
             title="movie trailer"
             width="100%"
             height="100%"
-            src={youtubeUrl}
+            src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=1`}
             frameBorder="0"
             allow="autoplay; fullscreen"
             allowFullScreen
           />
         ) : (
-          <video src={youtubeUrl} autoPlay loop controls />
+          <div className="no-video">No video trailer available</div>
         )}
       </div>
     </PlayContainer>
@@ -46,6 +41,7 @@ const PlayContainer = styled.div`
     width: 100vw;
     height: 100vh;
     position: relative;
+    background-color: black;
 
     .backArrow {
       position: absolute;
@@ -58,11 +54,22 @@ const PlayContainer = styled.div`
       }
     }
 
-    video,
     iframe {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .no-video {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 2rem;
+      text-align: center;
+      padding: 2rem;
     }
   }
 `;
